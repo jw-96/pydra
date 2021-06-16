@@ -1,6 +1,7 @@
 import os, shutil
 import subprocess as sp
 from pathlib import Path
+import attr
 import pytest
 
 from ..core import Workflow
@@ -8,6 +9,7 @@ from ..task import ShellCommandTask
 from ..submitter import Submitter
 from ..boutiques import BoshTask
 from .utils import result_no_submitter, result_submitter, no_win
+from ...engine.specs import File
 
 need_bosh_docker = pytest.mark.skipif(
     shutil.which("docker") is None
@@ -27,7 +29,7 @@ Infile = Path(__file__).resolve().parent / "data_tests" / "test.nii.gz"
 )
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_boutiques_1(maskfile, plugin, results_function, tmpdir):
-    """ simple task to run fsl.bet using BoshTask"""
+    """simple task to run fsl.bet using BoshTask"""
     btask = BoshTask(name="NA", zenodo_id="1482743")
     btask.inputs.infile = Infile
     btask.inputs.maskfile = maskfile
@@ -36,19 +38,18 @@ def test_boutiques_1(maskfile, plugin, results_function, tmpdir):
 
     assert res.output.return_code == 0
 
-    # checking if the outfile exists and if it has proper name
+    # checking if the outfile exists and if it has a proper name
     assert res.output.outfile.name == "test_brain.nii.gz"
     assert res.output.outfile.exists()
-    # other files should also have proper names, but they do not exist
-    assert res.output.out_outskin_off.name == "test_brain_outskin_mesh.off"
-    assert not res.output.out_outskin_off.exists()
+    # files that do not exist were set to NOTHING
+    assert res.output.out_outskin_off == attr.NOTHING
 
 
 @no_win
 @need_bosh_docker
 @pytest.mark.flaky(reruns=3)
 def test_boutiques_spec_1():
-    """ testing spec: providing input/output fields names"""
+    """testing spec: providing input/output fields names"""
     btask = BoshTask(
         name="NA",
         zenodo_id="1482743",
@@ -73,7 +74,7 @@ def test_boutiques_spec_1():
 @need_bosh_docker
 @pytest.mark.flaky(reruns=3)
 def test_boutiques_spec_2():
-    """ testing spec: providing partial input/output fields names"""
+    """testing spec: providing partial input/output fields names"""
     btask = BoshTask(
         name="NA",
         zenodo_id="1482743",
@@ -99,7 +100,7 @@ def test_boutiques_spec_2():
     "maskfile", ["test_brain.nii.gz", "test_brain", "test_brain.nii"]
 )
 def test_boutiques_wf_1(maskfile, plugin, tmpdir):
-    """ wf with one task that runs fsl.bet using BoshTask"""
+    """wf with one task that runs fsl.bet using BoshTask"""
     wf = Workflow(name="wf", input_spec=["maskfile", "infile"])
     wf.inputs.maskfile = maskfile
     wf.inputs.infile = Infile
@@ -132,7 +133,7 @@ def test_boutiques_wf_1(maskfile, plugin, tmpdir):
     "maskfile", ["test_brain.nii.gz", "test_brain", "test_brain.nii"]
 )
 def test_boutiques_wf_2(maskfile, plugin, tmpdir):
-    """ wf with two BoshTasks (fsl.bet and fsl.stats) and one ShellTask"""
+    """wf with two BoshTasks (fsl.bet and fsl.stats) and one ShellTask"""
     wf = Workflow(name="wf", input_spec=["maskfile", "infile"])
     wf.inputs.maskfile = maskfile
     wf.inputs.infile = Infile

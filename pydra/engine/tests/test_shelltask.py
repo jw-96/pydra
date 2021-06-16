@@ -14,6 +14,7 @@ from ..specs import (
     SpecInfo,
     File,
     Directory,
+    MultiInputFile,
     MultiOutputFile,
     MultiInputObj,
 )
@@ -26,7 +27,7 @@ if sys.platform.startswith("win"):
 @pytest.mark.flaky(reruns=2)  # when dask
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_1(plugin_dask_opt, results_function, tmpdir):
-    """ simple command, no arguments """
+    """simple command, no arguments"""
     cmd = ["pwd"]
     shelly = ShellCommandTask(name="shelly", executable=cmd, cache_dir=tmpdir)
     assert shelly.cmdline == " ".join(cmd)
@@ -39,8 +40,8 @@ def test_shell_cmd_1(plugin_dask_opt, results_function, tmpdir):
 
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_1_strip(plugin, results_function, tmpdir):
-    """ simple command, no arguments
-        strip option to remove \n at the end os stdout
+    """simple command, no arguments
+    strip option to remove \n at the end os stdout
     """
     cmd = ["pwd"]
     shelly = ShellCommandTask(name="shelly", executable=cmd, strip=True)
@@ -55,7 +56,7 @@ def test_shell_cmd_1_strip(plugin, results_function, tmpdir):
 
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_2(plugin, results_function, tmpdir):
-    """ a command with arguments, cmd and args given as executable """
+    """a command with arguments, cmd and args given as executable"""
     cmd = ["echo", "hail", "pydra"]
     shelly = ShellCommandTask(name="shelly", executable=cmd)
     shelly.cache_dir = tmpdir
@@ -69,7 +70,7 @@ def test_shell_cmd_2(plugin, results_function, tmpdir):
 
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_2a(plugin, results_function, tmpdir):
-    """ a command with arguments, using executable and args """
+    """a command with arguments, using executable and args"""
     cmd_exec = "echo"
     cmd_args = ["hail", "pydra"]
     # separate command into exec + args
@@ -86,7 +87,7 @@ def test_shell_cmd_2a(plugin, results_function, tmpdir):
 
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_2b(plugin, results_function, tmpdir):
-    """ a command with arguments, using  strings executable and args """
+    """a command with arguments, using  strings executable and args"""
     cmd_exec = "echo"
     cmd_args = "pydra"
     # separate command into exec + args
@@ -106,8 +107,8 @@ def test_shell_cmd_2b(plugin, results_function, tmpdir):
 
 @pytest.mark.flaky(reruns=2)
 def test_shell_cmd_3(plugin_dask_opt, tmpdir):
-    """ commands without arguments
-        splitter = executable
+    """commands without arguments
+    splitter = executable
     """
     cmd = ["pwd", "whoami"]
 
@@ -128,8 +129,8 @@ def test_shell_cmd_3(plugin_dask_opt, tmpdir):
 
 
 def test_shell_cmd_4(plugin, tmpdir):
-    """ a command with arguments, using executable and args
-        splitter=args
+    """a command with arguments, using executable and args
+    splitter=args
     """
     cmd_exec = "echo"
     cmd_args = ["nipype", "pydra"]
@@ -152,8 +153,8 @@ def test_shell_cmd_4(plugin, tmpdir):
 
 
 def test_shell_cmd_5(plugin, tmpdir):
-    """ a command with arguments
-        using splitter and combiner for args
+    """a command with arguments
+    using splitter and combiner for args
     """
     cmd_exec = "echo"
     cmd_args = ["nipype", "pydra"]
@@ -175,8 +176,8 @@ def test_shell_cmd_5(plugin, tmpdir):
 
 
 def test_shell_cmd_6(plugin, tmpdir):
-    """ a command with arguments,
-        outer splitter for executable and args
+    """a command with arguments,
+    outer splitter for executable and args
     """
     cmd_exec = ["echo", ["echo", "-n"]]
     cmd_args = ["nipype", "pydra"]
@@ -218,8 +219,8 @@ def test_shell_cmd_6(plugin, tmpdir):
 
 
 def test_shell_cmd_7(plugin, tmpdir):
-    """ a command with arguments,
-        outer splitter for executable and args, and combiner=args
+    """a command with arguments,
+    outer splitter for executable and args, and combiner=args
     """
     cmd_exec = ["echo", ["echo", "-n"]]
     cmd_args = ["nipype", "pydra"]
@@ -247,7 +248,7 @@ def test_shell_cmd_7(plugin, tmpdir):
 
 
 def test_wf_shell_cmd_1(plugin, tmpdir):
-    """ a workflow with two connected commands"""
+    """a workflow with two connected commands"""
     wf = Workflow(name="wf", input_spec=["cmd1", "cmd2"])
     wf.inputs.cmd1 = "pwd"
     wf.inputs.cmd2 = "ls"
@@ -274,9 +275,9 @@ def test_wf_shell_cmd_1(plugin, tmpdir):
 
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_inputspec_1(plugin, results_function, use_validator, tmpdir):
-    """ a command with executable, args and one command opt,
-        using a customized input_spec to add the opt to the command
-        in the right place that is specified in metadata["cmd_pos"]
+    """a command with executable, args and one command opt,
+    using a customized input_spec to add the opt to the command
+    in the right place that is specified in metadata["cmd_pos"]
     """
     cmd_exec = "echo"
     cmd_opt = True
@@ -314,9 +315,9 @@ def test_shell_cmd_inputspec_1(plugin, results_function, use_validator, tmpdir):
 
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_inputspec_2(plugin, results_function, use_validator, tmpdir):
-    """ a command with executable, args and two command options,
-        using a customized input_spec to add the opt to the command
-        in the right place that is specified in metadata["cmd_pos"]
+    """a command with executable, args and two command options,
+    using a customized input_spec to add the opt to the command
+    in the right place that is specified in metadata["cmd_pos"]
     """
     cmd_exec = "echo"
     cmd_opt = True
@@ -362,7 +363,7 @@ def test_shell_cmd_inputspec_2(plugin, results_function, use_validator, tmpdir):
 
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_inputspec_3(plugin, results_function, tmpdir):
-    """  mandatory field added to fields, value provided """
+    """mandatory field added to fields, value provided"""
     cmd_exec = "echo"
     hello = "HELLO"
     my_input_spec = SpecInfo(
@@ -400,8 +401,8 @@ def test_shell_cmd_inputspec_3(plugin, results_function, tmpdir):
 
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_inputspec_3a(plugin, results_function, tmpdir):
-    """  mandatory field added to fields, value provided
-        using shorter syntax for input spec (no attr.ib)
+    """mandatory field added to fields, value provided
+    using shorter syntax for input spec (no attr.ib)
     """
     cmd_exec = "echo"
     hello = "HELLO"
@@ -433,7 +434,7 @@ def test_shell_cmd_inputspec_3a(plugin, results_function, tmpdir):
 
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_inputspec_3b(plugin, results_function, tmpdir):
-    """  mandatory field added to fields, value provided after init"""
+    """mandatory field added to fields, value provided after init"""
     cmd_exec = "echo"
     hello = "HELLO"
     my_input_spec = SpecInfo(
@@ -468,7 +469,7 @@ def test_shell_cmd_inputspec_3b(plugin, results_function, tmpdir):
 
 
 def test_shell_cmd_inputspec_3c_exception(plugin, tmpdir):
-    """  mandatory field added to fields, value is not provided, so exception is raised """
+    """mandatory field added to fields, value is not provided, so exception is raised"""
     cmd_exec = "echo"
     my_input_spec = SpecInfo(
         name="Input",
@@ -500,7 +501,7 @@ def test_shell_cmd_inputspec_3c_exception(plugin, tmpdir):
 
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_inputspec_3c(plugin, results_function, tmpdir):
-    """  mandatory=False, so tasks runs fine even without the value """
+    """mandatory=False, so tasks runs fine even without the value"""
     cmd_exec = "echo"
     my_input_spec = SpecInfo(
         name="Input",
@@ -535,7 +536,7 @@ def test_shell_cmd_inputspec_3c(plugin, results_function, tmpdir):
 
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_inputspec_4(plugin, results_function, tmpdir):
-    """  mandatory field added to fields, value provided """
+    """mandatory field added to fields, value provided"""
     cmd_exec = "echo"
     my_input_spec = SpecInfo(
         name="Input",
@@ -566,8 +567,8 @@ def test_shell_cmd_inputspec_4(plugin, results_function, tmpdir):
 
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_inputspec_4a(plugin, results_function, tmpdir):
-    """  mandatory field added to fields, value provided
-        using shorter syntax for input spec (no attr.ib)
+    """mandatory field added to fields, value provided
+    using shorter syntax for input spec (no attr.ib)
     """
     cmd_exec = "echo"
     my_input_spec = SpecInfo(
@@ -592,7 +593,7 @@ def test_shell_cmd_inputspec_4a(plugin, results_function, tmpdir):
 
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_inputspec_4b(plugin, results_function, tmpdir):
-    """  mandatory field added to fields, value provided """
+    """mandatory field added to fields, value provided"""
     cmd_exec = "echo"
     my_input_spec = SpecInfo(
         name="Input",
@@ -622,7 +623,7 @@ def test_shell_cmd_inputspec_4b(plugin, results_function, tmpdir):
 
 
 def test_shell_cmd_inputspec_4c_exception(plugin):
-    """  mandatory field added to fields, value provided """
+    """mandatory field added to fields, value provided"""
     cmd_exec = "echo"
     my_input_spec = SpecInfo(
         name="Input",
@@ -656,7 +657,7 @@ def test_shell_cmd_inputspec_4c_exception(plugin):
 
 
 def test_shell_cmd_inputspec_4d_exception(plugin):
-    """  mandatory field added to fields, value provided """
+    """mandatory field added to fields, value provided"""
     cmd_exec = "echo"
     my_input_spec = SpecInfo(
         name="Input",
@@ -691,7 +692,7 @@ def test_shell_cmd_inputspec_4d_exception(plugin):
 
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_inputspec_5_nosubm(plugin, results_function, tmpdir):
-    """ checking xor in metadata: task should work fine, since only one option is True"""
+    """checking xor in metadata: task should work fine, since only one option is True"""
     cmd_exec = "ls"
     cmd_t = True
     my_input_spec = SpecInfo(
@@ -739,7 +740,7 @@ def test_shell_cmd_inputspec_5_nosubm(plugin, results_function, tmpdir):
 
 
 def test_shell_cmd_inputspec_5a_exception(plugin, tmpdir):
-    """ checking xor in metadata: both options are True, so the task raises exception"""
+    """checking xor in metadata: both options are True, so the task raises exception"""
     cmd_exec = "ls"
     cmd_t = True
     cmd_S = True
@@ -789,8 +790,8 @@ def test_shell_cmd_inputspec_5a_exception(plugin, tmpdir):
 
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_inputspec_6(plugin, results_function, tmpdir):
-    """ checking requires in metadata:
-        the required field is set in the init, so the task works fine
+    """checking requires in metadata:
+    the required field is set in the init, so the task works fine
     """
     cmd_exec = "ls"
     cmd_l = True
@@ -836,8 +837,8 @@ def test_shell_cmd_inputspec_6(plugin, results_function, tmpdir):
 
 
 def test_shell_cmd_inputspec_6a_exception(plugin):
-    """ checking requires in metadata:
-        the required field is None, so the task works raises exception
+    """checking requires in metadata:
+    the required field is None, so the task works raises exception
     """
     cmd_exec = "ls"
     cmd_t = True
@@ -877,8 +878,8 @@ def test_shell_cmd_inputspec_6a_exception(plugin):
 
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_inputspec_6b(plugin, results_function, tmpdir):
-    """ checking requires in metadata:
-        the required field set after the init
+    """checking requires in metadata:
+    the required field set after the init
     """
     cmd_exec = "ls"
     cmd_l = True
@@ -927,8 +928,8 @@ def test_shell_cmd_inputspec_6b(plugin, results_function, tmpdir):
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_inputspec_7(plugin, results_function, tmpdir):
     """
-        providing output name using input_spec,
-        using name_tamplate in metadata
+    providing output name using input_spec,
+    using name_tamplate in metadata
     """
     cmd = "touch"
     args = "newfile_tmp.txt"
@@ -969,9 +970,9 @@ def test_shell_cmd_inputspec_7(plugin, results_function, tmpdir):
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_inputspec_7a(plugin, results_function, tmpdir):
     """
-        providing output name using input_spec,
-        using name_tamplate in metadata
-        and changing the output name for output_spec using output_field_name
+    providing output name using input_spec,
+    using name_tamplate in metadata
+    and changing the output name for output_spec using output_field_name
     """
     cmd = "touch"
     args = "newfile_tmp.txt"
@@ -1013,8 +1014,8 @@ def test_shell_cmd_inputspec_7a(plugin, results_function, tmpdir):
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_inputspec_7b(plugin, results_function, tmpdir):
     """
-        providing new file and output name using input_spec,
-        using name_template in metadata
+    providing new file and output name using input_spec,
+    using name_template in metadata
     """
     cmd = "touch"
 
@@ -1058,8 +1059,8 @@ def test_shell_cmd_inputspec_7b(plugin, results_function, tmpdir):
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_inputspec_7c(plugin, results_function, tmpdir):
     """
-        providing output name using input_spec,
-        using name_tamplate with txt extension (extension from args should be removed
+    providing output name using input_spec,
+    using name_tamplate with txt extension (extension from args should be removed
     """
     cmd = "touch"
     args = "newfile_tmp.txt"
@@ -1100,8 +1101,8 @@ def test_shell_cmd_inputspec_7c(plugin, results_function, tmpdir):
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_inputspec_8(plugin, results_function, tmpdir):
     """
-        providing new file and output name using input_spec,
-        adding additional string input field with argstr
+    providing new file and output name using input_spec,
+    adding additional string input field with argstr
     """
     cmd = "touch"
 
@@ -1157,8 +1158,8 @@ def test_shell_cmd_inputspec_8(plugin, results_function, tmpdir):
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_inputspec_8a(plugin, results_function, tmpdir):
     """
-        providing new file and output name using input_spec,
-        adding additional string input field with argstr (argstr uses string formatting)
+    providing new file and output name using input_spec,
+    adding additional string input field with argstr (argstr uses string formatting)
     """
     cmd = "touch"
 
@@ -1214,8 +1215,8 @@ def test_shell_cmd_inputspec_8a(plugin, results_function, tmpdir):
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_inputspec_9(tmpdir, plugin, results_function):
     """
-        providing output name using input_spec (output_file_template in metadata),
-        the template has a suffix, the extension of the file will be moved to the end
+    providing output name using input_spec (output_file_template in metadata),
+    the template has a suffix, the extension of the file will be moved to the end
     """
     cmd = "cp"
     file = tmpdir.mkdir("data_inp").join("file.txt")
@@ -1265,9 +1266,9 @@ def test_shell_cmd_inputspec_9(tmpdir, plugin, results_function):
 @pytest.mark.parametrize("results_function", [result_no_submitter])
 def test_shell_cmd_inputspec_9a(tmpdir, plugin, results_function):
     """
-        providing output name using input_spec (output_file_template in metadata),
-        the template has a suffix, the extension of the file will be moved to the end
-        the change: input file has directory with a dot
+    providing output name using input_spec (output_file_template in metadata),
+    the template has a suffix, the extension of the file will be moved to the end
+    the change: input file has directory with a dot
     """
     cmd = "cp"
     file = tmpdir.mkdir("data.inp").join("file.txt")
@@ -1313,8 +1314,8 @@ def test_shell_cmd_inputspec_9a(tmpdir, plugin, results_function):
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_inputspec_9b(tmpdir, plugin, results_function):
     """
-        providing output name using input_spec (output_file_template in metadata)
-        and the keep_extension is set to False, so the extension is removed completely.
+    providing output name using input_spec (output_file_template in metadata)
+    and the keep_extension is set to False, so the extension is removed completely.
     """
     cmd = "cp"
     file = tmpdir.join("file.txt")
@@ -1363,9 +1364,9 @@ def test_shell_cmd_inputspec_9b(tmpdir, plugin, results_function):
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_inputspec_9c(tmpdir, plugin, results_function):
     """
-        providing output name using input_spec (output_file_template in metadata)
-        and the keep_extension is set to False, so the extension is removed completely,
-        no suffix in the template.
+    providing output name using input_spec (output_file_template in metadata)
+    and the keep_extension is set to False, so the extension is removed completely,
+    no suffix in the template.
     """
     cmd = "cp"
     file = tmpdir.join("file.txt")
@@ -1414,7 +1415,7 @@ def test_shell_cmd_inputspec_9c(tmpdir, plugin, results_function):
 
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_inputspec_10(plugin, results_function, tmpdir):
-    """ using input_spec, providing list of files as an input """
+    """using input_spec, providing list of files as an input"""
 
     file_1 = tmpdir.join("file_1.txt")
     file_2 = tmpdir.join("file_2.txt")
@@ -1460,7 +1461,7 @@ def test_shell_cmd_inputspec_10(plugin, results_function, tmpdir):
 
 
 def test_shell_cmd_inputspec_10_err(tmpdir):
-    """ checking if the proper error is raised when broken symlink is provided
+    """checking if the proper error is raised when broken symlink is provided
     as a input field with File as a type
     """
 
@@ -1503,11 +1504,62 @@ def test_shell_cmd_inputspec_10_err(tmpdir):
         res = shelly()
 
 
+def test_shell_cmd_inputsspec_11():
+    input_fields = [
+        (
+            "inputFiles",
+            attr.ib(
+                type=MultiInputFile,
+                metadata={
+                    "argstr": "...",
+                    "help_string": "The list of input image files to be segmented.",
+                },
+            ),
+        )
+    ]
+
+    output_fields = [
+        (
+            "outputFiles",
+            attr.ib(
+                type=MultiOutputFile,
+                metadata={
+                    "help_string": "Corrected Output Images: should specify the same number of images as inputVolume, if only one element is given, then it is used as a file pattern where %s is replaced by the imageVolumeType, and %d by the index list location.",
+                    "output_file_template": "{inputFiles}",
+                },
+            ),
+        )
+    ]
+
+    input_spec = SpecInfo(name="Input", fields=input_fields, bases=(ShellSpec,))
+    output_spec = SpecInfo(name="Output", fields=output_fields, bases=(ShellOutSpec,))
+
+    task = ShellCommandTask(
+        name="echoMultiple",
+        executable="touch",
+        input_spec=input_spec,
+        output_spec=output_spec,
+    )
+    wf = Workflow(name="wf", input_spec=["inputFiles"], inputFiles=["test1", "test2"])
+
+    task.inputs.inputFiles = wf.lzin.inputFiles
+
+    wf.add(task)
+    wf.set_output([("out", wf.echoMultiple.lzout.outputFiles)])
+
+    with Submitter(plugin="cf") as sub:
+        sub(wf)
+    result = wf.result()
+
+    for out_file in result.output.out:
+        assert out_file.name == "test1" or out_file.name == "test2"
+
+
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_inputspec_copyfile_1(plugin, results_function, tmpdir):
-    """ shelltask changes a file in place,
-        adding copyfile=True to the file-input from input_spec
-        hardlink or copy in the output_dir should be created
+    """shelltask changes a file in place,
+    adding copyfile=True to the file-input from input_spec
+    hardlink or copy in the output_dir should be created
     """
     file = tmpdir.join("file_pydra.txt")
     with open(file, "w") as f:
@@ -1567,9 +1619,9 @@ def test_shell_cmd_inputspec_copyfile_1(plugin, results_function, tmpdir):
 
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_inputspec_copyfile_1a(plugin, results_function, tmpdir):
-    """ shelltask changes a file in place,
-        adding copyfile=False to the File-input from input_spec
-        hardlink or softlink in the output_dir is created
+    """shelltask changes a file in place,
+    adding copyfile=False to the File-input from input_spec
+    hardlink or softlink in the output_dir is created
     """
     file = tmpdir.join("file_pydra.txt")
     with open(file, "w") as f:
@@ -1645,8 +1697,8 @@ def test_shell_cmd_inputspec_copyfile_1a(plugin, results_function, tmpdir):
 )
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_inputspec_copyfile_1b(plugin, results_function, tmpdir):
-    """ shelltask changes a file in place,
-        copyfile is None for the file-input, so original filed is changed
+    """shelltask changes a file in place,
+    copyfile is None for the file-input, so original filed is changed
     """
     file = tmpdir.join("file_pydra.txt")
     with open(file, "w") as f:
@@ -1702,7 +1754,7 @@ def test_shell_cmd_inputspec_copyfile_1b(plugin, results_function, tmpdir):
 
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_inputspec_state_1(plugin, results_function, tmpdir):
-    """  adding state to the input from input_spec """
+    """adding state to the input from input_spec"""
     cmd_exec = "echo"
     hello = ["HELLO", "hi"]
     my_input_spec = SpecInfo(
@@ -1741,8 +1793,8 @@ def test_shell_cmd_inputspec_state_1(plugin, results_function, tmpdir):
 
 
 def test_shell_cmd_inputspec_typeval_1(use_validator):
-    """ customized input_spec with a type that doesn't match the value
-     - raise an exception
+    """customized input_spec with a type that doesn't match the value
+    - raise an exception
     """
     cmd_exec = "echo"
 
@@ -1767,8 +1819,8 @@ def test_shell_cmd_inputspec_typeval_1(use_validator):
 
 
 def test_shell_cmd_inputspec_typeval_2(use_validator):
-    """ customized input_spec (shorter syntax) with a type that doesn't match the value
-     - raise an exception
+    """customized input_spec (shorter syntax) with a type that doesn't match the value
+    - raise an exception
     """
     cmd_exec = "echo"
 
@@ -1786,8 +1838,8 @@ def test_shell_cmd_inputspec_typeval_2(use_validator):
 
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_inputspec_state_1a(plugin, results_function, tmpdir):
-    """  adding state to the input from input_spec
-        using shorter syntax for input_spec (without default)
+    """adding state to the input from input_spec
+    using shorter syntax for input_spec (without default)
     """
     cmd_exec = "echo"
     hello = ["HELLO", "hi"]
@@ -1821,7 +1873,7 @@ def test_shell_cmd_inputspec_state_1a(plugin, results_function, tmpdir):
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_inputspec_state_2(plugin, results_function, tmpdir):
     """
-        adding splitter to input tha is used in the output_file_tamplate
+    adding splitter to input tha is used in the output_file_tamplate
     """
     cmd = "touch"
     args = ["newfile_1.txt", "newfile_2.txt"]
@@ -1860,7 +1912,7 @@ def test_shell_cmd_inputspec_state_2(plugin, results_function, tmpdir):
 
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_inputspec_state_3(plugin, results_function, tmpdir):
-    """  adding state to the File-input from input_spec """
+    """adding state to the File-input from input_spec"""
 
     file_1 = tmpdir.join("file_pydra.txt")
     file_2 = tmpdir.join("file_nice.txt")
@@ -1909,7 +1961,7 @@ def test_shell_cmd_inputspec_state_3(plugin, results_function, tmpdir):
 
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_inputspec_copyfile_state_1(plugin, results_function, tmpdir):
-    """  adding state to the File-input from input_spec """
+    """adding state to the File-input from input_spec"""
 
     file1 = tmpdir.join("file1.txt")
     with open(file1, "w") as f:
@@ -1979,8 +2031,8 @@ def test_shell_cmd_inputspec_copyfile_state_1(plugin, results_function, tmpdir):
 
 @pytest.mark.flaky(reruns=2)  # when dask
 def test_wf_shell_cmd_2(plugin_dask_opt, tmpdir):
-    """ a workflow with input with defined output_file_template (str)
-        that requires wf.lzin
+    """a workflow with input with defined output_file_template (str)
+    that requires wf.lzin
     """
     wf = Workflow(name="wf", input_spec=["cmd", "args"])
 
@@ -2026,8 +2078,8 @@ def test_wf_shell_cmd_2(plugin_dask_opt, tmpdir):
 
 
 def test_wf_shell_cmd_2a(plugin, tmpdir):
-    """ a workflow with input with defined output_file_template (tuple)
-        that requires wf.lzin
+    """a workflow with input with defined output_file_template (tuple)
+    that requires wf.lzin
     """
     wf = Workflow(name="wf", input_spec=["cmd", "args"])
 
@@ -2072,9 +2124,9 @@ def test_wf_shell_cmd_2a(plugin, tmpdir):
 
 
 def test_wf_shell_cmd_3(plugin, tmpdir):
-    """ a workflow with 2 tasks,
-        first one has input with output_file_template (str, uses wf.lzin),
-        that is passed to the second task
+    """a workflow with 2 tasks,
+    first one has input with output_file_template (str, uses wf.lzin),
+    that is passed to the second task
     """
     wf = Workflow(name="wf", input_spec=["cmd1", "cmd2", "args"])
 
@@ -2169,9 +2221,9 @@ def test_wf_shell_cmd_3(plugin, tmpdir):
 
 
 def test_wf_shell_cmd_3a(plugin, tmpdir):
-    """ a workflow with 2 tasks,
-        first one has input with output_file_template (str, uses wf.lzin),
-        that is passed to the second task
+    """a workflow with 2 tasks,
+    first one has input with output_file_template (str, uses wf.lzin),
+    that is passed to the second task
     """
     wf = Workflow(name="wf", input_spec=["cmd1", "cmd2", "args"])
 
@@ -2264,9 +2316,9 @@ def test_wf_shell_cmd_3a(plugin, tmpdir):
 
 
 def test_wf_shell_cmd_state_1(plugin):
-    """ a workflow with 2 tasks and splitter on the wf level,
-        first one has input with output_file_template (str, uses wf.lzin),
-        that is passed to the second task
+    """a workflow with 2 tasks and splitter on the wf level,
+    first one has input with output_file_template (str, uses wf.lzin),
+    that is passed to the second task
     """
     wf = Workflow(name="wf", input_spec=["cmd1", "cmd2", "args"]).split("args")
 
@@ -2361,9 +2413,9 @@ def test_wf_shell_cmd_state_1(plugin):
 
 
 def test_wf_shell_cmd_ndst_1(plugin, tmpdir):
-    """ a workflow with 2 tasks and a splitter on the node level,
-        first one has input with output_file_template (str, uses wf.lzin),
-        that is passed to the second task
+    """a workflow with 2 tasks and a splitter on the node level,
+    first one has input with output_file_template (str, uses wf.lzin),
+    that is passed to the second task
     """
     wf = Workflow(name="wf", input_spec=["cmd1", "cmd2", "args"])
 
@@ -2461,7 +2513,7 @@ def test_wf_shell_cmd_ndst_1(plugin, tmpdir):
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_outputspec_1(plugin, results_function, tmpdir):
     """
-        customised output_spec, adding files to the output, providing specific pathname
+    customised output_spec, adding files to the output, providing specific pathname
     """
     cmd = ["touch", "newfile_tmp.txt"]
     my_output_spec = SpecInfo(
@@ -2481,7 +2533,7 @@ def test_shell_cmd_outputspec_1(plugin, results_function, tmpdir):
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_outputspec_1a(plugin, results_function, tmpdir):
     """
-        customised output_spec, adding files to the output, providing specific pathname
+    customised output_spec, adding files to the output, providing specific pathname
     """
     cmd = ["touch", "newfile_tmp.txt"]
     my_output_spec = SpecInfo(
@@ -2500,7 +2552,7 @@ def test_shell_cmd_outputspec_1a(plugin, results_function, tmpdir):
 
 def test_shell_cmd_outputspec_1b_exception(plugin, tmpdir):
     """
-        customised output_spec, adding files to the output, providing specific pathname
+    customised output_spec, adding files to the output, providing specific pathname
     """
     cmd = ["touch", "newfile_tmp.txt"]
     my_output_spec = SpecInfo(
@@ -2521,8 +2573,8 @@ def test_shell_cmd_outputspec_1b_exception(plugin, tmpdir):
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_outputspec_2(plugin, results_function, tmpdir):
     """
-        customised output_spec, adding files to the output,
-        using a wildcard in default
+    customised output_spec, adding files to the output,
+    using a wildcard in default
     """
     cmd = ["touch", "newfile_tmp.txt"]
     my_output_spec = SpecInfo(
@@ -2541,8 +2593,8 @@ def test_shell_cmd_outputspec_2(plugin, results_function, tmpdir):
 
 def test_shell_cmd_outputspec_2a_exception(plugin, tmpdir):
     """
-        customised output_spec, adding files to the output,
-        using a wildcard in default
+    customised output_spec, adding files to the output,
+    using a wildcard in default
     """
     cmd = ["touch", "newfile_tmp.txt"]
     my_output_spec = SpecInfo(
@@ -2563,8 +2615,8 @@ def test_shell_cmd_outputspec_2a_exception(plugin, tmpdir):
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_outputspec_3(plugin, results_function, tmpdir):
     """
-        customised output_spec, adding files to the output,
-        using a wildcard in default, should collect two files
+    customised output_spec, adding files to the output,
+    using a wildcard in default, should collect two files
     """
     cmd = ["touch", "newfile_tmp1.txt", "newfile_tmp2.txt"]
     my_output_spec = SpecInfo(
@@ -2586,9 +2638,61 @@ def test_shell_cmd_outputspec_3(plugin, results_function, tmpdir):
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_outputspec_4(plugin, results_function, tmpdir):
     """
-        customised output_spec, adding files to the output,
-        using a function to collect output, the function is saved in the field metadata
-        and uses output_dir and the glob function
+    customised output_spec, adding files to the output,
+    using a wildcard in default (in the directory name)
+    """
+    cmd = ["mkdir", "tmp1", ";", "touch", "tmp1/newfile.txt"]
+    my_output_spec = SpecInfo(
+        name="Output",
+        fields=[("newfile", File, "tmp*/newfile.txt")],
+        bases=(ShellOutSpec,),
+    )
+    shelly = ShellCommandTask(
+        name="shelly", executable=cmd, output_spec=my_output_spec, cache_dir=tmpdir
+    )
+
+    res = results_function(shelly, plugin)
+    assert res.output.stdout == ""
+    assert res.output.newfile.exists()
+
+
+@pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
+def test_shell_cmd_outputspec_4a(plugin, results_function, tmpdir):
+    """
+    customised output_spec, adding files to the output,
+    using a wildcard in default (in the directory name), should collect two files
+    """
+    cmd = [
+        "mkdir",
+        "tmp1",
+        "tmp2",
+        ";",
+        "touch",
+        "tmp1/newfile.txt",
+        "tmp2/newfile.txt",
+    ]
+    my_output_spec = SpecInfo(
+        name="Output",
+        fields=[("newfile", File, "tmp*/newfile.txt")],
+        bases=(ShellOutSpec,),
+    )
+    shelly = ShellCommandTask(
+        name="shelly", executable=cmd, output_spec=my_output_spec, cache_dir=tmpdir
+    )
+
+    res = results_function(shelly, plugin)
+    assert res.output.stdout == ""
+    # newfile is a list
+    assert len(res.output.newfile) == 2
+    assert all([file.exists for file in res.output.newfile])
+
+
+@pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
+def test_shell_cmd_outputspec_5(plugin, results_function, tmpdir):
+    """
+    customised output_spec, adding files to the output,
+    using a function to collect output, the function is saved in the field metadata
+    and uses output_dir and the glob function
     """
     cmd = ["touch", "newfile_tmp1.txt", "newfile_tmp2.txt"]
 
@@ -2613,11 +2717,11 @@ def test_shell_cmd_outputspec_4(plugin, results_function, tmpdir):
 
 
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
-def test_shell_cmd_outputspec_4a(plugin, results_function):
+def test_shell_cmd_outputspec_5a(plugin, results_function):
     """
-        customised output_spec, adding files to the output,
-        using a function to collect output, the function is saved in the field metadata
-        and uses output_dir and inputs element
+    customised output_spec, adding files to the output,
+    using a function to collect output, the function is saved in the field metadata
+    and uses output_dir and inputs element
     """
     cmd = ["touch", "newfile_tmp1.txt", "newfile_tmp2.txt"]
 
@@ -2639,11 +2743,11 @@ def test_shell_cmd_outputspec_4a(plugin, results_function):
     assert all([file.exists for file in res.output.newfile])
 
 
-def test_shell_cmd_outputspec_4b_error():
+def test_shell_cmd_outputspec_5b_error():
     """
-        customised output_spec, adding files to the output,
-        using a function to collect output, the function is saved in the field metadata
-        with an argument that is not part of the inputs - error is raised
+    customised output_spec, adding files to the output,
+    using a function to collect output, the function is saved in the field metadata
+    with an argument that is not part of the inputs - error is raised
     """
     cmd = ["touch", "newfile_tmp1.txt", "newfile_tmp2.txt"]
 
@@ -2662,10 +2766,10 @@ def test_shell_cmd_outputspec_4b_error():
 
 
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
-def test_shell_cmd_outputspec_5(plugin, results_function, tmpdir):
+def test_shell_cmd_outputspec_6(plugin, results_function, tmpdir):
     """
-        providing output name by providing output_file_template
-        (similar to the previous example, but not touching input_spec)
+    providing output name by providing output_file_template
+    (similar to the previous example, but not touching input_spec)
     """
     cmd = "touch"
     args = "newfile_tmp.txt"
@@ -2700,10 +2804,10 @@ def test_shell_cmd_outputspec_5(plugin, results_function, tmpdir):
     assert res.output.out1.exists()
 
 
-def test_shell_cmd_outputspec_5a():
+def test_shell_cmd_outputspec_6a():
     """
-        providing output name by providing output_file_template
-        (using shorter syntax)
+    providing output name by providing output_file_template
+    (using shorter syntax)
     """
     cmd = "touch"
     args = "newfile_tmp.txt"
@@ -2730,10 +2834,10 @@ def test_shell_cmd_outputspec_5a():
 
 
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
-def test_shell_cmd_outputspec_6(tmpdir, plugin, results_function):
+def test_shell_cmd_outputspec_7(tmpdir, plugin, results_function):
     """
-        providing output with output_file_name and using MultiOutputFile as a type.
-        the input field used in the template is a MultiInputObj, so it can be and is a list
+    providing output with output_file_name and using MultiOutputFile as a type.
+    the input field used in the template is a MultiInputObj, so it can be and is a list
     """
     file = tmpdir.join("script.sh")
     file.write(f'for var in "$@"; do touch file"$var".txt; done')
@@ -2806,10 +2910,10 @@ def test_shell_cmd_outputspec_6(tmpdir, plugin, results_function):
 
 
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
-def test_shell_cmd_outputspec_6a(tmpdir, plugin, results_function):
+def test_shell_cmd_outputspec_7a(tmpdir, plugin, results_function):
     """
-        providing output with output_file_name and using MultiOutputFile as a type.
-        the input field used in the template is a MultiInputObj, but a single element is used
+    providing output with output_file_name and using MultiOutputFile as a type.
+    the input field used in the template is a MultiInputObj, but a single element is used
     """
     file = tmpdir.join("script.sh")
     file.write(f'for var in "$@"; do touch file"$var".txt; done')
@@ -2881,10 +2985,10 @@ def test_shell_cmd_outputspec_6a(tmpdir, plugin, results_function):
 
 
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
-def test_shell_cmd_outputspec_7a(tmpdir, plugin, results_function):
+def test_shell_cmd_outputspec_8a(tmpdir, plugin, results_function):
     """
-        customised output_spec, adding int and str to the output,
-        requiring two callables with parameters stdout and stderr
+    customised output_spec, adding int and str to the output,
+    requiring two callables with parameters stdout and stderr
     """
     cmd = "echo"
     args = ["newfile_1.txt", "newfile_2.txt"]
@@ -2942,10 +3046,10 @@ def test_shell_cmd_outputspec_7a(tmpdir, plugin, results_function):
         assert res.output.stderr_field == f"stderr: {res.output.stderr}"
 
 
-def test_shell_cmd_outputspec_7b_error():
+def test_shell_cmd_outputspec_8b_error():
     """
-        customised output_spec, adding Int to the output,
-        requiring a function to collect output
+    customised output_spec, adding Int to the output,
+    requiring a function to collect output
     """
     cmd = "echo"
     args = ["newfile_1.txt", "newfile_2.txt"]
@@ -2971,9 +3075,9 @@ def test_shell_cmd_outputspec_7b_error():
 
 
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
-def test_shell_cmd_outputspec_7c(tmpdir, plugin, results_function):
+def test_shell_cmd_outputspec_8c(tmpdir, plugin, results_function):
     """
-        customised output_spec, adding Directory to the output named by args
+    customised output_spec, adding Directory to the output named by args
     """
 
     def get_lowest_directory(directory_path):
@@ -3014,11 +3118,11 @@ def test_shell_cmd_outputspec_7c(tmpdir, plugin, results_function):
 
 
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
-def test_shell_cmd_outputspec_7d(tmpdir, plugin, results_function):
+def test_shell_cmd_outputspec_8d(tmpdir, plugin, results_function):
     """
-        customised output_spec, adding Directory to the output named by input spec
+    customised output_spec, adding Directory to the output named by input spec
     """
-
+    # For /tmp/some_dict/test this function returns "/test"
     def get_lowest_directory(directory_path):
         return str(directory_path).replace(str(Path(directory_path).parents[0]), "")
 
@@ -3052,6 +3156,7 @@ def test_shell_cmd_outputspec_7d(tmpdir, plugin, results_function):
                     metadata={
                         "output_file_template": "{resultsDir}",
                         "help_string": "output file",
+                        "absolute_path": True,
                     },
                 ),
             )
@@ -3077,8 +3182,8 @@ def test_shell_cmd_outputspec_7d(tmpdir, plugin, results_function):
 @pytest.mark.parametrize("results_function", [result_no_submitter, result_submitter])
 def test_shell_cmd_state_outputspec_1(plugin, results_function, tmpdir):
     """
-        providing output name by providing output_file_template
-        splitter for a field that is used in the template
+    providing output name by providing output_file_template
+    splitter for a field that is used in the template
     """
     cmd = "touch"
     args = ["newfile_1.txt", "newfile_2.txt"]
@@ -3119,8 +3224,8 @@ def test_shell_cmd_state_outputspec_1(plugin, results_function, tmpdir):
 
 def test_shell_cmd_outputspec_wf_1(plugin, tmpdir):
     """
-        customised output_spec for tasks within a Workflow,
-        adding files to the output, providing specific pathname
+    customised output_spec for tasks within a Workflow,
+    adding files to the output, providing specific pathname
     """
 
     cmd = ["touch", "newfile_tmp.txt"]
@@ -3855,7 +3960,7 @@ def no_fsl():
 
 @pytest.mark.skipif(no_fsl(), reason="fsl is not installed")
 def test_fsl():
-    """  mandatory field added to fields, value provided """
+    """mandatory field added to fields, value provided"""
 
     _xor_inputs = [
         "functional",
@@ -4092,3 +4197,776 @@ def test_fsl():
     assert shelly.inputs.executable == "bet"
     assert shelly.cmdline == f"bet {in_file} {out_file}"
     # res = shelly(plugin="cf")
+
+
+def test_shell_cmd_non_existing_outputs_1(tmpdir):
+    """Checking that non existing output files do not return a phantom path,
+    but return NOTHING instead"""
+    input_spec = SpecInfo(
+        name="Input",
+        fields=[
+            (
+                "out_name",
+                attr.ib(
+                    type=str,
+                    metadata={
+                        "help_string": """
+                        base name of the pretend outputs.
+                        """,
+                        "mandatory": True,
+                    },
+                ),
+            )
+        ],
+        bases=(ShellSpec,),
+    )
+    out_spec = SpecInfo(
+        name="Output",
+        fields=[
+            (
+                "out_1",
+                attr.ib(
+                    type=File,
+                    metadata={
+                        "help_string": "fictional output #1",
+                        "output_file_template": "{out_name}_1.nii",
+                    },
+                ),
+            ),
+            (
+                "out_2",
+                attr.ib(
+                    type=File,
+                    metadata={
+                        "help_string": "fictional output #2",
+                        "output_file_template": "{out_name}_2.nii",
+                    },
+                ),
+            ),
+        ],
+        bases=(ShellOutSpec,),
+    )
+
+    shelly = ShellCommandTask(
+        cache_dir=tmpdir,
+        executable="echo",
+        input_spec=input_spec,
+        output_spec=out_spec,
+        out_name="test",
+    )
+    shelly()
+    res = shelly.result()
+    assert res.output.out_1 == attr.NOTHING and res.output.out_2 == attr.NOTHING
+
+
+def test_shell_cmd_non_existing_outputs_2(tmpdir):
+    """Checking that non existing output files do not return a phantom path,
+    but return NOTHING instead. This test has one existing and one non existing output file."""
+    input_spec = SpecInfo(
+        name="Input",
+        fields=[
+            (
+                "out_name",
+                attr.ib(
+                    type=str,
+                    metadata={
+                        "help_string": """
+                        base name of the pretend outputs.
+                        """,
+                        "mandatory": True,
+                        "argstr": "{out_name}_1.nii",
+                    },
+                ),
+            )
+        ],
+        bases=(ShellSpec,),
+    )
+    out_spec = SpecInfo(
+        name="Output",
+        fields=[
+            (
+                "out_1",
+                attr.ib(
+                    type=File,
+                    metadata={
+                        "help_string": "fictional output #1",
+                        "output_file_template": "{out_name}_1.nii",
+                    },
+                ),
+            ),
+            (
+                "out_2",
+                attr.ib(
+                    type=File,
+                    metadata={
+                        "help_string": "fictional output #2",
+                        "output_file_template": "{out_name}_2.nii",
+                    },
+                ),
+            ),
+        ],
+        bases=(ShellOutSpec,),
+    )
+
+    shelly = ShellCommandTask(
+        cache_dir=tmpdir,
+        executable="touch",
+        input_spec=input_spec,
+        output_spec=out_spec,
+        out_name="test",
+    )
+    shelly()
+    res = shelly.result()
+    # the first output file is created
+    assert res.output.out_1 == Path(shelly.output_dir) / Path("test_1.nii")
+    assert res.output.out_1.exists()
+    # the second output file is not created
+    assert res.output.out_2 == attr.NOTHING
+
+
+def test_shell_cmd_non_existing_outputs_3(tmpdir):
+    """Checking that non existing output files do not return a phantom path,
+    but return NOTHING instead. This test has an existing mandatory output and another non existing output file."""
+    input_spec = SpecInfo(
+        name="Input",
+        fields=[
+            (
+                "out_name",
+                attr.ib(
+                    type=str,
+                    metadata={
+                        "help_string": """
+                        base name of the pretend outputs.
+                        """,
+                        "mandatory": True,
+                        "argstr": "{out_name}_1.nii",
+                    },
+                ),
+            )
+        ],
+        bases=(ShellSpec,),
+    )
+    out_spec = SpecInfo(
+        name="Output",
+        fields=[
+            (
+                "out_1",
+                attr.ib(
+                    type=File,
+                    metadata={
+                        "help_string": "fictional output #1",
+                        "output_file_template": "{out_name}_1.nii",
+                        "mandatory": True,
+                    },
+                ),
+            ),
+            (
+                "out_2",
+                attr.ib(
+                    type=File,
+                    metadata={
+                        "help_string": "fictional output #2",
+                        "output_file_template": "{out_name}_2.nii",
+                    },
+                ),
+            ),
+        ],
+        bases=(ShellOutSpec,),
+    )
+
+    shelly = ShellCommandTask(
+        cache_dir=tmpdir,
+        executable="touch",
+        input_spec=input_spec,
+        output_spec=out_spec,
+        out_name="test",
+    )
+    shelly()
+    res = shelly.result()
+    # the first output file is created
+    assert res.output.out_1 == Path(shelly.output_dir) / Path("test_1.nii")
+    assert res.output.out_1.exists()
+    # the second output file is not created
+    assert res.output.out_2 == attr.NOTHING
+
+
+def test_shell_cmd_non_existing_outputs_4(tmpdir):
+    """Checking that non existing output files do not return a phantom path,
+    but return NOTHING instead. This test has an existing mandatory output and another non existing
+    mandatory output file."""
+    input_spec = SpecInfo(
+        name="Input",
+        fields=[
+            (
+                "out_name",
+                attr.ib(
+                    type=str,
+                    metadata={
+                        "help_string": """
+                        base name of the pretend outputs.
+                        """,
+                        "mandatory": True,
+                        "argstr": "{out_name}_1.nii",
+                    },
+                ),
+            )
+        ],
+        bases=(ShellSpec,),
+    )
+    out_spec = SpecInfo(
+        name="Output",
+        fields=[
+            (
+                "out_1",
+                attr.ib(
+                    type=File,
+                    metadata={
+                        "help_string": "fictional output #1",
+                        "output_file_template": "{out_name}_1.nii",
+                        "mandatory": True,
+                    },
+                ),
+            ),
+            (
+                "out_2",
+                attr.ib(
+                    type=File,
+                    metadata={
+                        "help_string": "fictional output #2",
+                        "output_file_template": "{out_name}_2.nii",
+                        "mandatory": True,
+                    },
+                ),
+            ),
+        ],
+        bases=(ShellOutSpec,),
+    )
+
+    shelly = ShellCommandTask(
+        cache_dir=tmpdir,
+        executable="touch",
+        input_spec=input_spec,
+        output_spec=out_spec,
+        out_name="test",
+    )
+    # An execption should be raised because the second mandatory output does not exist
+    with pytest.raises(Exception) as excinfo:
+        shelly()
+    assert "mandatory output for variable out_2 does not exit" == str(excinfo.value)
+    # checking if the first output was created
+    assert (Path(shelly.output_dir) / Path("test_1.nii")).exists()
+
+
+def test_shell_cmd_non_existing_outputs_multi_1(tmpdir):
+    """This test looks if non existing files of an multiOuputFile are also set to NOTHING"""
+    input_spec = SpecInfo(
+        name="Input",
+        fields=[
+            (
+                "out_name",
+                attr.ib(
+                    type=MultiInputObj,
+                    metadata={
+                        "help_string": """
+                        base name of the pretend outputs.
+                        """,
+                        "mandatory": True,
+                        "argstr": "...",
+                    },
+                ),
+            )
+        ],
+        bases=(ShellSpec,),
+    )
+    out_spec = SpecInfo(
+        name="Output",
+        fields=[
+            (
+                "out_list",
+                attr.ib(
+                    type=MultiOutputFile,
+                    metadata={
+                        "help_string": "fictional output #1",
+                        "output_file_template": "{out_name}",
+                    },
+                ),
+            ),
+        ],
+        bases=(ShellOutSpec,),
+    )
+
+    shelly = ShellCommandTask(
+        cache_dir=tmpdir,
+        executable="echo",
+        input_spec=input_spec,
+        output_spec=out_spec,
+        out_name=["test_1.nii", "test_2.nii"],
+    )
+    shelly()
+    res = shelly.result()
+    # checking if the outputs are Nothing
+    assert res.output.out_list[0] == attr.NOTHING
+    assert res.output.out_list[1] == attr.NOTHING
+
+
+def test_shell_cmd_non_existing_outputs_multi_2(tmpdir):
+    """This test looks if non existing files of an multiOutputFile are also set to NOTHING.
+    It checks that it also works if one file of the multiOutputFile actually exists."""
+    input_spec = SpecInfo(
+        name="Input",
+        fields=[
+            (
+                "out_name",
+                attr.ib(
+                    type=MultiInputObj,
+                    metadata={
+                        "help_string": """
+                        base name of the pretend outputs.
+                        """,
+                        "sep": " test_1_real.nii",  # hacky way of creating an extra file with that name
+                        "mandatory": True,
+                        "argstr": "...",
+                    },
+                ),
+            )
+        ],
+        bases=(ShellSpec,),
+    )
+    out_spec = SpecInfo(
+        name="Output",
+        fields=[
+            (
+                "out_list",
+                attr.ib(
+                    type=MultiOutputFile,
+                    metadata={
+                        "help_string": "fictional output #1",
+                        "output_file_template": "{out_name}_real.nii",
+                    },
+                ),
+            ),
+        ],
+        bases=(ShellOutSpec,),
+    )
+
+    shelly = ShellCommandTask(
+        cache_dir=tmpdir,
+        executable="touch",
+        input_spec=input_spec,
+        output_spec=out_spec,
+        out_name=["test_1", "test_2"],
+    )
+    shelly()
+    res = shelly.result()
+    # checking if the outputs are Nothing
+    assert res.output.out_list[0] == Path(shelly.output_dir) / "test_1_real.nii"
+    assert res.output.out_list[1] == attr.NOTHING
+
+
+def test_shellspec_cmd_absolute_path(tmpdir):
+    """test the 'absolute_path' metadata option. An output path marked with this should not be appended
+    to the nodes output_dir."""
+    input_spec = SpecInfo(
+        name="Input",
+        fields=[
+            (
+                "out_dir",
+                attr.ib(
+                    type=str,
+                    metadata={
+                        "help_string": """
+                            base name of the pretend outputs.
+                            """,
+                        "mandatory": True,
+                        "argstr": "{out_dir}/test_1.nii",
+                    },
+                ),
+            )
+        ],
+        bases=(ShellSpec,),
+    )
+    out_spec = SpecInfo(
+        name="Output",
+        fields=[
+            (
+                "out_1",
+                attr.ib(
+                    type=File,
+                    metadata={
+                        "help_string": "fictional output #1",
+                        "output_file_template": "{out_dir}/test_1.nii",
+                        "absolute_path": True,
+                    },
+                ),
+            ),
+        ],
+        bases=(ShellOutSpec,),
+    )
+
+    shelly = ShellCommandTask(
+        executable="touch", input_spec=input_spec, output_spec=out_spec, out_dir=tmpdir
+    )
+    shelly()
+    res = shelly.result()
+    # checking if the output was created
+    assert (Path(tmpdir) / Path("test_1.nii")).exists()
+    # check if path of the output is correct
+    assert res.output.out_1 == Path(tmpdir) / Path("test_1.nii")
+
+
+def test_shellspec_cmd_absolute_path_not_absolute(tmpdir):
+    """test the 'absolute_path' metadata option. An output path marked with this should not be appended
+    to the nodes output_dir. This test checks if an output named 'test_1.nii' that is an absolute_path
+    is set to NOTHING in case that file exists in the output_dir."""
+    input_spec = SpecInfo(
+        name="Input",
+        fields=[
+            (
+                "out_dir",
+                attr.ib(
+                    type=str,
+                    metadata={
+                        "help_string": """
+                            base name of the pretend outputs.
+                            """,
+                        "mandatory": True,
+                        # creating the file in out_dir and the nodes working directory
+                        "argstr": "{out_dir}/test_1.nii test_1.nii",
+                    },
+                ),
+            )
+        ],
+        bases=(ShellSpec,),
+    )
+    out_spec = SpecInfo(
+        name="Output",
+        fields=[
+            (
+                "out_1",
+                attr.ib(
+                    type=File,
+                    metadata={
+                        "help_string": "fictional output #1",
+                        "output_file_template": "test_1.nii",
+                        "absolute_path": True,
+                    },
+                ),
+            ),
+        ],
+        bases=(ShellOutSpec,),
+    )
+
+    shelly = ShellCommandTask(
+        executable="touch", input_spec=input_spec, output_spec=out_spec, out_dir=tmpdir
+    )
+    shelly()
+    res = shelly.result()
+    # checking if the output was created
+    assert (Path(tmpdir) / Path("test_1.nii")).exists()
+    assert (Path(shelly.output_dir) / Path("test_1.nii")).exists()
+    # check if path of the output is correct
+    assert res.output.out_1 == attr.NOTHING
+
+
+def test_shellspec_cmd_absolute_path_non_existing(tmpdir):
+    """test the 'absolute_path' metadata option. An output path marked with this should not be appended
+    to the nodes output_dir. Testing for a existing and non existing file."""
+    input_spec = SpecInfo(
+        name="Input",
+        fields=[
+            (
+                "out_dir",
+                attr.ib(
+                    type=str,
+                    metadata={
+                        "help_string": """
+                            base name of the pretend outputs.
+                            """,
+                        "mandatory": True,
+                        "argstr": "{out_dir}/test.nii",
+                    },
+                ),
+            )
+        ],
+        bases=(ShellSpec,),
+    )
+    out_spec = SpecInfo(
+        name="Output",
+        fields=[
+            (
+                "out_1",
+                attr.ib(
+                    type=File,
+                    metadata={
+                        "help_string": "fictional output #1",
+                        "output_file_template": "{out_dir}/test_1.nii",
+                        "absolute_path": True,
+                    },
+                ),
+            ),
+            (
+                "out_2",
+                attr.ib(
+                    type=File,
+                    metadata={
+                        "help_string": "fictional output #1",
+                        "output_file_template": "{out_dir}/test.nii",
+                        "absolute_path": True,
+                    },
+                ),
+            ),
+        ],
+        bases=(ShellOutSpec,),
+    )
+
+    shelly = ShellCommandTask(
+        executable="touch", input_spec=input_spec, output_spec=out_spec, out_dir=tmpdir
+    )
+    shelly()
+    res = shelly.result()
+    # checking if the output was created
+    assert (Path(tmpdir) / Path("test.nii")).exists()
+    # check if path of the out_1 is correct
+    assert res.output.out_1 == attr.NOTHING
+    # check if path of the out_1 is correct
+    assert res.output.out_2 == (Path(tmpdir) / Path("test.nii"))
+
+
+def test_shellspec_cmd_absolute_path_non_existing_multi(tmpdir):
+    """test the 'absolute_path' metadata option. An output path marked with this should not be appended
+    to the nodes output_dir. Testing for a existing and non existing file in multiOutputObj."""
+    input_spec = SpecInfo(
+        name="Input",
+        fields=[
+            (
+                "out_name",
+                attr.ib(
+                    type=MultiInputObj,
+                    metadata={
+                        "help_string": """
+                        base name of the pretend outputs.
+                        """,
+                        "mandatory": True,
+                        "argstr": "...",
+                    },
+                ),
+            )
+        ],
+        bases=(ShellSpec,),
+    )
+    out_spec = SpecInfo(
+        name="Output",
+        fields=[
+            (
+                "out_list",
+                attr.ib(
+                    type=MultiOutputFile,
+                    metadata={
+                        "help_string": "fictional output #1",
+                        "output_file_template": "{out_name}",
+                        "absolute_path": True,
+                    },
+                ),
+            ),
+        ],
+        bases=(ShellOutSpec,),
+    )
+
+    shelly = ShellCommandTask(
+        executable="touch",
+        input_spec=input_spec,
+        output_spec=out_spec,
+        out_name=[str(Path(tmpdir) / "test_1.nii"), "test_2.nii"],
+    )
+    shelly()
+    res = shelly.result()
+    # checking if the outputs are Nothing
+    assert res.output.out_list[0] == Path(tmpdir) / "test_1.nii"
+    assert res.output.out_list[1] == attr.NOTHING
+
+
+def test_shellspec_formatter_1(tmpdir):
+    """test the input callable 'formatter'."""
+
+    def spec_info(formatter):
+        return SpecInfo(
+            name="Input",
+            fields=[
+                (
+                    "in1",
+                    attr.ib(
+                        type=str,
+                        metadata={
+                            "help_string": """
+                            just a dummy name
+                            """,
+                            "mandatory": True,
+                        },
+                    ),
+                ),
+                (
+                    "in2",
+                    attr.ib(
+                        type=str,
+                        metadata={
+                            "help_string": """
+                                just a dummy name
+                                """,
+                            "mandatory": True,
+                        },
+                    ),
+                ),
+                (
+                    "together",
+                    attr.ib(
+                        type=ty.List,
+                        metadata={
+                            "help_string": """
+                                combines in1 and in2 into a list
+                                """,
+                            # When providing a formatter all other metadata options are discarded.
+                            "formatter": formatter,
+                        },
+                    ),
+                ),
+            ],
+            bases=(ShellSpec,),
+        )
+
+    def formatter_1(inputs):
+        print("FORMATTER:", inputs)
+        return f"-t [{inputs['in1']}, {inputs['in2']}]"
+
+    input_spec = spec_info(formatter_1)
+    shelly = ShellCommandTask(
+        executable="exec", input_spec=input_spec, in1="i1", in2="i2"
+    )
+    assert shelly.cmdline == "exec -t [i1, i2]"
+
+    # testing that the formatter can overwrite a provided value for together.
+    shelly = ShellCommandTask(
+        executable="exec",
+        input_spec=input_spec,
+        in1="i1",
+        in2="i2",
+        together=[1],
+    )
+    assert shelly.cmdline == "exec -t [i1, i2]"
+
+    # asking for specific inputs
+    def formatter_2(in1, in2):
+        print("FORMATTER:", in1, in2)
+        return f"-t [{in1}, {in2}]"
+
+    input_spec = spec_info(formatter_2)
+
+    shelly = ShellCommandTask(
+        executable="exec", input_spec=input_spec, in1="i1", in2="i2"
+    )
+    assert shelly.cmdline == "exec -t [i1, i2]"
+
+    def formatter_3(in1, in3):
+        print("FORMATTER:", in1, in3)
+        return f"-t [{in1}, {in3}]"
+
+    input_spec = spec_info(formatter_3)
+
+    shelly = ShellCommandTask(
+        executable="exec", input_spec=input_spec, in1="i1", in2="i2"
+    )
+    with pytest.raises(Exception) as excinfo:
+        shelly.cmdline
+    assert (
+        "arguments of the formatter function from together has to be in inputs or be field or output_dir, but in3 is used"
+        == str(excinfo.value)
+    )
+
+    # chcking if field value is accessible when None
+    def formatter_5(field):
+        assert field == "-t test"
+        # formatter must return a string
+        return field
+
+    input_spec = spec_info(formatter_5)
+
+    shelly = ShellCommandTask(
+        executable="exec",
+        input_spec=input_spec,
+        in1="i1",
+        in2="i2",
+        together="-t test",
+    )
+    assert shelly.cmdline == "exec -t test"
+
+    # chcking if field value is accessible when None
+    def formatter_4(field):
+        assert field == None
+        # formatter must return a string
+        return ""
+
+    input_spec = spec_info(formatter_4)
+
+    shelly = ShellCommandTask(
+        executable="exec", input_spec=input_spec, in1="i1", in2="i2"
+    )
+    assert shelly.cmdline == "exec"
+
+
+def test_shellspec_formatter_splitter_2(tmpdir):
+    """test the input callable 'formatter' when a splitter is used on an argument of the formatter."""
+
+    def spec_info(formatter):
+        return SpecInfo(
+            name="Input",
+            fields=[
+                (
+                    "in1",
+                    attr.ib(
+                        type=str,
+                        metadata={
+                            "help_string": "in1",
+                        },
+                    ),
+                ),
+                (
+                    "in2",
+                    attr.ib(
+                        type=str,
+                        metadata={
+                            "help_string": "in2",
+                        },
+                    ),
+                ),
+                (
+                    "together",
+                    attr.ib(
+                        type=ty.List,
+                        metadata={
+                            "help_string": """
+                            uses in1
+                            """,
+                            # When providing a formatter all other metadata options are discarded.
+                            "formatter": formatter,
+                        },
+                    ),
+                ),
+            ],
+            bases=(ShellSpec,),
+        )
+
+    # asking for specific inputs
+    def formatter_1(in1, in2):
+        return f"-t [{in1} {in2}]"
+
+    input_spec = spec_info(formatter_1)
+    in1 = ["in11", "in12"]
+    shelly = ShellCommandTask(
+        name="f", executable="executable", input_spec=input_spec, in1=in1, in2="in2"
+    ).split("in1")
+    assert shelly != None
+
+    results = shelly.cmdline
+    assert len(results) == 2
+    com_results = ["executable -t [in11 in2]", "executable -t [in12 in2]"]
+    for i, cr in enumerate(com_results):
+        assert results[i] == cr

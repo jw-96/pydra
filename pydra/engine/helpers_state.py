@@ -317,7 +317,7 @@ def rpn2splitter(splitter_rpn):
 
 
 def add_name_combiner(combiner, name):
-    """ adding a node's name to each field from the combiner"""
+    """adding a node's name to each field from the combiner"""
     combiner_changed = []
     for comb in combiner:
         if "." not in comb:
@@ -328,7 +328,7 @@ def add_name_combiner(combiner, name):
 
 
 def add_name_splitter(splitter, name):
-    """ adding a node's name to each field from the splitter"""
+    """adding a node's name to each field from the splitter"""
     if isinstance(splitter, str):
         return _add_name([splitter], name)[0]
     elif isinstance(splitter, list):
@@ -339,7 +339,7 @@ def add_name_splitter(splitter, name):
 
 
 def _add_name(mlist, name):
-    """ adding anem to each element from the list"""
+    """adding anem to each element from the list"""
     for i, elem in enumerate(mlist):
         if isinstance(elem, str):
             if "." in elem or elem.startswith("_"):
@@ -381,7 +381,7 @@ def iter_splits(iterable, keys):
 
 
 def input_shape(inp, cont_dim=1):
-    """Get input shape, depends on the container dimension, if not specify it is assumed to be 1 """
+    """Get input shape, depends on the container dimension, if not specify it is assumed to be 1"""
     # TODO: have to be changed for inner splitter (sometimes different length)
     cont_dim -= 1
     shape = [len(inp)]
@@ -546,7 +546,7 @@ def splits(splitter_rpn, inputs, inner_inputs=None, cont_dim=None):
 def _single_op_splits(
     op_single, inputs, inner_inputs, previous_states_ind, cont_dim=None
 ):
-    """ splits function if splitter is a singleton"""
+    """splits function if splitter is a singleton"""
     if op_single.startswith("_"):
         return (previous_states_ind[op_single][0], previous_states_ind[op_single][1])
     if cont_dim is None:
@@ -572,8 +572,8 @@ def _single_op_splits(
 
 
 def splits_groups(splitter_rpn, combiner=None, inner_inputs=None):
-    """ splits inputs to groups (axes) and creates stacks for these groups
-        This is used to specify which input can be combined.
+    """splits inputs to groups (axes) and creates stacks for these groups
+    This is used to specify which input can be combined.
     """
     if not splitter_rpn:
         return [], {}, [], []
@@ -706,7 +706,7 @@ def splits_groups(splitter_rpn, combiner=None, inner_inputs=None):
 
 
 def _single_op_splits_groups(op_single, combiner, inner_inputs, groups):
-    """ splits_groups function if splitter is a singleton"""
+    """splits_groups function if splitter is a singleton"""
     if op_single in inner_inputs:
         # TODO: have to be changed if differ length
         # TODO: i think I don't want to add here from left part
@@ -757,15 +757,25 @@ def combine_final_groups(combiner, groups, groups_stack, keys):
                     "first".format(comb, groups_stack[-1])
                 )
     groups_final = {inp: gr for (inp, gr) in groups.items() if inp not in combiner_all}
-    gr_final = list(set(groups_final.values()))
+    gr_final = set()
+    for el in groups_final.values():
+        gr_final.update(ensure_list(el))
+    gr_final = list(gr_final)
     map_gr_nr = {nr: i for (i, nr) in enumerate(sorted(gr_final))}
-    groups_final = {inp: map_gr_nr[gr] for (inp, gr) in groups_final.items()}
+    groups_final_map = {}
+    for (inp, gr) in groups_final.items():
+        if isinstance(gr, int):
+            groups_final_map[inp] = map_gr_nr[gr]
+        elif isinstance(gr, list):
+            groups_final_map[inp] = [map_gr_nr[el] for el in gr]
+        else:
+            raise Exception("gr should be an int or a list, something wrong")
     for i, groups_l in enumerate(groups_stack_final):
         groups_stack_final[i] = [map_gr_nr[gr] for gr in groups_l]
 
     keys_final = [key for key in keys if key not in combiner_all]
     # TODO: not sure if I have to calculate and return keys, groups, groups_stack
-    return keys_final, groups_final, groups_stack_final, combiner_all
+    return keys_final, groups_final_map, groups_stack_final, combiner_all
 
 
 def map_splits(split_iter, inputs, cont_dim=None):

@@ -14,6 +14,7 @@ from .utils import (
     fun_dict,
     fun_file,
     fun_file_list,
+    op_4var,
 )
 
 from ..core import TaskBase
@@ -35,7 +36,7 @@ def change_dir(request):
 
 # Tests for tasks initializations
 def test_task_init_1():
-    """ task with mandatory arguments only"""
+    """task with mandatory arguments only"""
     nn = fun_addtwo()
     assert isinstance(nn, TaskBase)
     assert nn.name == "fun_addtwo"
@@ -48,7 +49,7 @@ def test_task_init_1a():
 
 
 def test_task_init_2():
-    """ task with a name and inputs"""
+    """task with a name and inputs"""
     nn = fun_addtwo(name="NA", a=3)
     # adding NA to the name of the variable
     assert getattr(nn.inputs, "a") == 3
@@ -63,7 +64,7 @@ def test_task_init_2():
 def test_task_init_3(
     splitter, state_splitter, state_rpn, states_ind, states_val, input_type
 ):
-    """ task with inputs and splitter"""
+    """task with inputs and splitter"""
     a_in = [3, 5]
     if input_type == "array":
         a_in = np.array(a_in)
@@ -112,7 +113,7 @@ def test_task_init_3(
 def test_task_init_3a(
     splitter, state_splitter, state_rpn, states_ind, states_val, input_type
 ):
-    """ task with inputs and splitter"""
+    """task with inputs and splitter"""
     a_in, b_in = [3, 5], [10, 20]
     if input_type == "array":
         a_in, b_in = np.array(a_in), np.array(b_in)
@@ -131,7 +132,7 @@ def test_task_init_3a(
 
 
 def test_task_init_4():
-    """ task with interface and inputs. splitter set using split method"""
+    """task with interface and inputs. splitter set using split method"""
     nn = fun_addtwo(name="NA", a=[3, 5])
     nn.split(splitter="a")
     assert np.allclose(nn.inputs.a, [3, 5])
@@ -145,7 +146,7 @@ def test_task_init_4():
 
 
 def test_task_init_4a():
-    """ task with a splitter and inputs set in the split method"""
+    """task with a splitter and inputs set in the split method"""
     nn = fun_addtwo(name="NA")
     nn.split(splitter="a", a=[3, 5])
     assert np.allclose(nn.inputs.a, [3, 5])
@@ -159,7 +160,7 @@ def test_task_init_4a():
 
 
 def test_task_init_4b():
-    """ updating splitter using overwrite=True"""
+    """updating splitter using overwrite=True"""
     nn = fun_addtwo(name="NA")
     nn.split(splitter="b", a=[3, 5])
     nn.split(splitter="a", overwrite=True)
@@ -174,7 +175,7 @@ def test_task_init_4b():
 
 
 def test_task_init_4c():
-    """ trying to set splitter twice without using overwrite"""
+    """trying to set splitter twice without using overwrite"""
     nn = fun_addtwo(name="NA").split(splitter="b", a=[3, 5])
     with pytest.raises(Exception) as excinfo:
         nn.split(splitter="a")
@@ -184,8 +185,8 @@ def test_task_init_4c():
 
 
 def test_task_init_4d():
-    """ trying to set the same splitter twice without using overwrite
-        if the splitter is the same, the exception shouldn't be raised
+    """trying to set the same splitter twice without using overwrite
+    if the splitter is the same, the exception shouldn't be raised
     """
     nn = fun_addtwo(name="NA").split(splitter="a", a=[3, 5])
     nn.split(splitter="a")
@@ -193,7 +194,7 @@ def test_task_init_4d():
 
 
 def test_task_init_5():
-    """ task with inputs, splitter and combiner"""
+    """task with inputs, splitter and combiner"""
     nn = (
         fun_addvar(name="NA")
         .split(splitter=["a", "b"], a=[3, 5], b=[1, 2])
@@ -225,7 +226,7 @@ def test_task_init_5():
 
 
 def test_task_init_5a():
-    """ updating combiner using overwrite=True"""
+    """updating combiner using overwrite=True"""
     nn = (
         fun_addvar(name="NA")
         .split(splitter=["a", "b"], a=[3, 5], b=[1, 2])
@@ -258,7 +259,7 @@ def test_task_init_5a():
 
 
 def test_task_init_5b():
-    """ updating combiner without using overwrite"""
+    """updating combiner without using overwrite"""
     nn = (
         fun_addvar(name="NA")
         .split(splitter=["a", "b"], a=[3, 5], b=[1, 2])
@@ -272,8 +273,8 @@ def test_task_init_5b():
 
 
 def test_task_init_5c():
-    """ trying to set the same combiner twice without using overwrite
-        if the combiner is the same, the exception shouldn't be raised
+    """trying to set the same combiner twice without using overwrite
+    if the combiner is the same, the exception shouldn't be raised
     """
     nn = (
         fun_addvar(name="NA")
@@ -291,7 +292,7 @@ def test_task_init_5c():
 
 
 def test_task_init_6():
-    """ task with splitter, but the input is an empty list"""
+    """task with splitter, but the input is an empty list"""
     nn = fun_addtwo(name="NA", a=[])
     nn.split(splitter="a")
     assert nn.inputs.a == []
@@ -305,7 +306,7 @@ def test_task_init_6():
 
 
 def test_task_init_7(tmpdir):
-    """ task with a dictionary of files as an input, checking checksum"""
+    """task with a dictionary of files as an input, checking checksum"""
     file1 = tmpdir.join("file1.txt")
     with open(file1, "w") as f:
         f.write("hello")
@@ -330,13 +331,13 @@ def test_task_init_7(tmpdir):
 
 
 def test_task_init_8():
-    """ task without setting the input, the value should be set to attr.NOTHING"""
+    """task without setting the input, the value should be set to attr.NOTHING"""
     nn = fun_addtwo(name="NA")
     assert nn.inputs.a is attr.NOTHING
 
 
 def test_task_init_9():
-    """ task without setting the input, but using the default avlue from function"""
+    """task without setting the input, but using the default avlue from function"""
     nn1 = fun_addvar_default(name="NA", a=2)
     assert nn1.inputs.b == 1
 
@@ -354,8 +355,8 @@ def test_task_error():
 
 
 def test_odir_init():
-    """ checking if output_dir is available for a task without init
-        before running the task
+    """checking if output_dir is available for a task without init
+    before running the task
     """
     nn = fun_addtwo(name="NA", a=3)
     assert nn.output_dir
@@ -366,7 +367,7 @@ def test_odir_init():
 
 @pytest.mark.flaky(reruns=2)  # when dask
 def test_task_nostate_1(plugin_dask_opt, tmpdir):
-    """ task without splitter"""
+    """task without splitter"""
     nn = fun_addtwo(name="NA", a=3)
     nn.cache_dir = tmpdir
     assert np.allclose(nn.inputs.a, [3])
@@ -395,7 +396,7 @@ def test_task_nostate_1(plugin_dask_opt, tmpdir):
 
 
 def test_task_nostate_1_call():
-    """ task without splitter"""
+    """task without splitter"""
     nn = fun_addtwo(name="NA", a=3)
     nn()
     # checking the results
@@ -407,7 +408,7 @@ def test_task_nostate_1_call():
 
 @pytest.mark.flaky(reruns=2)  # when dask
 def test_task_nostate_1_call_subm(plugin_dask_opt, tmpdir):
-    """ task without splitter"""
+    """task without splitter"""
     nn = fun_addtwo(name="NA", a=3)
     nn.cache_dir = tmpdir
     assert np.allclose(nn.inputs.a, [3])
@@ -425,7 +426,7 @@ def test_task_nostate_1_call_subm(plugin_dask_opt, tmpdir):
 
 @pytest.mark.flaky(reruns=2)  # when dask
 def test_task_nostate_1_call_plug(plugin_dask_opt, tmpdir):
-    """ task without splitter"""
+    """task without splitter"""
     nn = fun_addtwo(name="NA", a=3)
     nn.cache_dir = tmpdir
     assert np.allclose(nn.inputs.a, [3])
@@ -441,7 +442,7 @@ def test_task_nostate_1_call_plug(plugin_dask_opt, tmpdir):
 
 
 def test_task_nostate_1_call_updateinp():
-    """ task without splitter"""
+    """task without splitter"""
     nn = fun_addtwo(name="NA", a=30)
     # updating input when calling the node
     nn(a=3)
@@ -454,7 +455,7 @@ def test_task_nostate_1_call_updateinp():
 
 
 def test_task_nostate_2(plugin, tmpdir):
-    """ task with a list as an input, but no splitter"""
+    """task with a list as an input, but no splitter"""
     nn = moment(name="NA", n=3, lst=[2, 3, 4])
     nn.cache_dir = tmpdir
     assert np.allclose(nn.inputs.n, [3])
@@ -472,7 +473,7 @@ def test_task_nostate_2(plugin, tmpdir):
 
 
 def test_task_nostate_3(plugin, tmpdir):
-    """ task with a dictionary as an input"""
+    """task with a dictionary as an input"""
     nn = fun_dict(name="NA", d={"a": "ala", "b": "bala"})
     nn.cache_dir = tmpdir
     assert nn.inputs.d == {"a": "ala", "b": "bala"}
@@ -488,7 +489,7 @@ def test_task_nostate_3(plugin, tmpdir):
 
 
 def test_task_nostate_4(plugin, tmpdir):
-    """ task with a dictionary as an input"""
+    """task with a dictionary as an input"""
     file1 = tmpdir.join("file.txt")
     with open(file1, "w") as f:
         f.write("hello from pydra\n")
@@ -507,7 +508,7 @@ def test_task_nostate_4(plugin, tmpdir):
 
 
 def test_task_nostate_5(tmpdir):
-    """ task with a dictionary of files as an input"""
+    """task with a dictionary of files as an input"""
     file1 = tmpdir.join("file1.txt")
     with open(file1, "w") as f:
         f.write("hello")
@@ -528,7 +529,7 @@ def test_task_nostate_5(tmpdir):
 
 
 def test_task_nostate_6():
-    """ checking if the function gets the None value"""
+    """checking if the function gets the None value"""
     nn = fun_addvar_none(name="NA", a=2, b=None)
     assert nn.inputs.b is None
     nn()
@@ -536,7 +537,7 @@ def test_task_nostate_6():
 
 
 def test_task_nostate_6a_exception():
-    """ checking if the function gets the attr.Nothing value"""
+    """checking if the function gets the attr.Nothing value"""
     nn = fun_addvar_none(name="NA", a=2)
     assert nn.inputs.b is attr.NOTHING
     with pytest.raises(TypeError) as excinfo:
@@ -545,7 +546,7 @@ def test_task_nostate_6a_exception():
 
 
 def test_task_nostate_7():
-    """ using the default value from the function for b input"""
+    """using the default value from the function for b input"""
     nn = fun_addvar_default(name="NA", a=2)
     assert nn.inputs.b == 1
     nn()
@@ -557,7 +558,7 @@ def test_task_nostate_7():
 
 @pytest.mark.flaky(reruns=2)  # when dask
 def test_task_nostate_cachedir(plugin_dask_opt, tmpdir):
-    """ task with provided cache_dir using pytest tmpdir"""
+    """task with provided cache_dir using pytest tmpdir"""
     cache_dir = tmpdir.mkdir("test_task_nostate")
     nn = fun_addtwo(name="NA", a=3, cache_dir=cache_dir)
     assert np.allclose(nn.inputs.a, [3])
@@ -573,7 +574,7 @@ def test_task_nostate_cachedir(plugin_dask_opt, tmpdir):
 
 @pytest.mark.flaky(reruns=2)  # when dask
 def test_task_nostate_cachedir_relativepath(tmpdir, plugin_dask_opt):
-    """ task with provided cache_dir as relative path"""
+    """task with provided cache_dir as relative path"""
     cwd = tmpdir.chdir()
     cache_dir = "test_task_nostate"
     tmpdir.mkdir(cache_dir)
@@ -726,7 +727,7 @@ def test_task_nostate_cachelocations_updated(plugin, tmpdir):
 @pytest.mark.flaky(reruns=2)  # when dask
 @pytest.mark.parametrize("input_type", ["list", "array"])
 def test_task_state_1(plugin_dask_opt, input_type, tmpdir):
-    """ task with the simplest splitter"""
+    """task with the simplest splitter"""
     a_in = [3, 5]
     if input_type == "array":
         a_in = np.array(a_in)
@@ -769,7 +770,7 @@ def test_task_state_1(plugin_dask_opt, input_type, tmpdir):
 
 
 def test_task_state_1a(plugin, tmpdir):
-    """ task with the simplest splitter (inputs set separately)"""
+    """task with the simplest splitter (inputs set separately)"""
     nn = fun_addtwo(name="NA")
     nn.split(splitter="a")
     nn.inputs.a = [3, 5]
@@ -790,8 +791,8 @@ def test_task_state_1a(plugin, tmpdir):
 
 
 def test_task_state_singl_1(plugin, tmpdir):
-    """ Tasks with two inputs and a splitter (no combiner)
-        one input is a single value, the other is in the splitter and combiner
+    """Tasks with two inputs and a splitter (no combiner)
+    one input is a single value, the other is in the splitter and combiner
     """
     nn = fun_addvar(name="NA").split(splitter="a", a=[3, 5], b=10)
     nn.cache_dir = tmpdir
@@ -857,7 +858,7 @@ def test_task_state_2(
     input_type,
     tmpdir,
 ):
-    """ Tasks with two inputs and a splitter (no combiner)"""
+    """Tasks with two inputs and a splitter (no combiner)"""
     a_in, b_in = [3, 5], [10, 20]
     if input_type == "array":
         a_in, b_in = np.array(a_in), np.array(b_in)
@@ -902,7 +903,7 @@ def test_task_state_2(
 
 
 def test_task_state_3(plugin, tmpdir):
-    """ task with the simplest splitter, the input is an empty list"""
+    """task with the simplest splitter, the input is an empty list"""
     nn = fun_addtwo(name="NA").split(splitter="a", a=[])
     nn.cache_dir = tmpdir
 
@@ -924,7 +925,7 @@ def test_task_state_3(plugin, tmpdir):
 
 @pytest.mark.parametrize("input_type", ["list", "array"])
 def test_task_state_4(plugin, input_type, tmpdir):
-    """ task with a list as an input, and a simple splitter """
+    """task with a list as an input, and a simple splitter"""
     lst_in = [[2, 3, 4], [1, 2, 3]]
     if input_type == "array":
         lst_in = np.array(lst_in)
@@ -957,7 +958,7 @@ def test_task_state_4(plugin, input_type, tmpdir):
 
 
 def test_task_state_4a(plugin, tmpdir):
-    """ task with a tuple as an input, and a simple splitter """
+    """task with a tuple as an input, and a simple splitter"""
     nn = moment(name="NA", n=3, lst=[(2, 3, 4), (1, 2, 3)]).split(splitter="lst")
     nn.cache_dir = tmpdir
 
@@ -979,7 +980,7 @@ def test_task_state_4a(plugin, tmpdir):
 
 
 def test_task_state_5(plugin, tmpdir):
-    """ task with a list as an input, and the variable is part of the scalar splitter"""
+    """task with a list as an input, and the variable is part of the scalar splitter"""
     nn = moment(name="NA", n=[1, 3], lst=[[2, 3, 4], [1, 2, 3]]).split(
         splitter=("n", "lst")
     )
@@ -1003,8 +1004,8 @@ def test_task_state_5(plugin, tmpdir):
 
 
 def test_task_state_5_exception(plugin, tmpdir):
-    """ task with a list as an input, and the variable is part of the scalar splitter
-        the shapes are not matching, so exception should be raised
+    """task with a list as an input, and the variable is part of the scalar splitter
+    the shapes are not matching, so exception should be raised
     """
     nn = moment(name="NA", n=[1, 3, 3], lst=[[2, 3, 4], [1, 2, 3]]).split(
         splitter=("n", "lst")
@@ -1022,7 +1023,7 @@ def test_task_state_5_exception(plugin, tmpdir):
 
 
 def test_task_state_6(plugin, tmpdir):
-    """ ask with a list as an input, and the variable is part of the outer splitter """
+    """ask with a list as an input, and the variable is part of the outer splitter"""
     nn = moment(name="NA", n=[1, 3], lst=[[2, 3, 4], [1, 2, 3]]).split(
         splitter=["n", "lst"]
     )
@@ -1046,7 +1047,7 @@ def test_task_state_6(plugin, tmpdir):
 
 
 def test_task_state_6a(plugin, tmpdir):
-    """ ask with a tuple as an input, and the variable is part of the outer splitter """
+    """ask with a tuple as an input, and the variable is part of the outer splitter"""
     nn = moment(name="NA", n=[1, 3], lst=[(2, 3, 4), (1, 2, 3)]).split(
         splitter=["n", "lst"]
     )
@@ -1071,7 +1072,7 @@ def test_task_state_6a(plugin, tmpdir):
 
 @pytest.mark.flaky(reruns=2)  # when dask
 def test_task_state_comb_1(plugin_dask_opt, tmpdir):
-    """ task with the simplest splitter and combiner"""
+    """task with the simplest splitter and combiner"""
     nn = fun_addtwo(name="NA").split(a=[3, 5], splitter="a").combine(combiner="a")
     nn.cache_dir = tmpdir
 
@@ -1207,7 +1208,7 @@ def test_task_state_comb_2(
     expected_val,
     tmpdir,
 ):
-    """ Tasks with scalar and outer splitters and  partial or full combiners"""
+    """Tasks with scalar and outer splitters and  partial or full combiners"""
     nn = (
         fun_addvar(name="NA")
         .split(a=[3, 5], b=[10, 20], splitter=splitter)
@@ -1254,9 +1255,9 @@ def test_task_state_comb_2(
 
 
 def test_task_state_comb_singl_1(plugin, tmpdir):
-    """ Tasks with two inputs;
-     one input is a single value, the other is in the splitter and combiner
-     """
+    """Tasks with two inputs;
+    one input is a single value, the other is in the splitter and combiner
+    """
     nn = fun_addvar(name="NA").split(splitter="a", a=[3, 5], b=10).combine(combiner="a")
     nn.cache_dir = tmpdir
 
@@ -1284,7 +1285,7 @@ def test_task_state_comb_singl_1(plugin, tmpdir):
 
 
 def test_task_state_comb_3(plugin, tmpdir):
-    """ task with the simplest splitter, the input is an empty list"""
+    """task with the simplest splitter, the input is an empty list"""
     nn = fun_addtwo(name="NA").split(splitter="a", a=[]).combine(combiner=["a"])
     nn.cache_dir = tmpdir
 
@@ -1305,8 +1306,8 @@ def test_task_state_comb_3(plugin, tmpdir):
 
 
 def test_task_state_comb_order():
-    """ tasks with an outer splitter and various combiner;
-        showing the order of results
+    """tasks with an outer splitter and various combiner;
+    showing the order of results
     """
 
     # single combiner "a" - will create two lists, first one for b=3, second for b=5
@@ -1360,12 +1361,83 @@ def test_task_state_comb_order():
     assert combined_results_ba == [13, 15, 23, 25]
 
 
+# Testing with container dimensions for the input
+
+
+def test_task_state_contdim_1(tmpdir):
+    """task with a spliter and container dimension for one of the value"""
+    task_4var = op_4var(
+        name="op_4var",
+        a="a1",
+        b=[["b1", "b2"], ["b3", "b4"]],
+        c=["c1", "c2"],
+        d=["d1", "d2"],
+        cache_dir=tmpdir,
+    )
+    task_4var.split(("b", ["c", "d"]), cont_dim={"b": 2})
+    task_4var()
+    res = task_4var.result()
+    assert len(res) == 4
+    assert res[3].output.out == "a1 b4 c2 d2"
+
+
+def test_task_state_contdim_2(tmpdir):
+    """task with a splitter and container dimension for one of the value"""
+    task_4var = op_4var(
+        name="op_4var",
+        a=["a1", "a2"],
+        b=[["b1", "b2"], ["b3", "b4"]],
+        c=["c1", "c2"],
+        d=["d1", "d2"],
+        cache_dir=tmpdir,
+    )
+    task_4var.split(["a", ("b", ["c", "d"])], cont_dim={"b": 2})
+    task_4var()
+    res = task_4var.result()
+    assert len(res) == 8
+    assert res[7].output.out == "a2 b4 c2 d2"
+
+
+def test_task_state_comb_contdim_1(tmpdir):
+    """task with a splitter-combiner, and container dimension for one of the value"""
+    task_4var = op_4var(
+        name="op_4var",
+        a="a1",
+        b=[["b1", "b2"], ["b3", "b4"]],
+        c=["c1", "c2"],
+        d=["d1", "d2"],
+        cache_dir=tmpdir,
+    )
+    task_4var.split(("b", ["c", "d"]), cont_dim={"b": 2}).combine("b")
+    task_4var()
+    res = task_4var.result()
+    assert len(res) == 4
+    assert res[3].output.out == "a1 b4 c2 d2"
+
+
+def test_task_state_comb_contdim_2(tmpdir):
+    """task with a splitter-combiner, and container dimension for one of the value"""
+    task_4var = op_4var(
+        name="op_4var",
+        a=["a1", "a2"],
+        b=[["b1", "b2"], ["b3", "b4"]],
+        c=["c1", "c2"],
+        d=["d1", "d2"],
+        cache_dir=tmpdir,
+    )
+    task_4var.split(["a", ("b", ["c", "d"])], cont_dim={"b": 2}).combine("a")
+    task_4var()
+    res = task_4var.result()
+    assert len(res) == 4
+    assert res[3][1].output.out == "a2 b4 c2 d2"
+
+
 # Testing caching for tasks with states
 
 
 @pytest.mark.flaky(reruns=2)  # when dask
 def test_task_state_cachedir(plugin_dask_opt, tmpdir):
-    """ task with a state and provided cache_dir using pytest tmpdir"""
+    """task with a state and provided cache_dir using pytest tmpdir"""
     cache_dir = tmpdir.mkdir("test_task_nostate")
     nn = fun_addtwo(name="NA", cache_dir=cache_dir).split(splitter="a", a=[3, 5])
 

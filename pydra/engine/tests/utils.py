@@ -24,13 +24,13 @@ no_win = pytest.mark.skipif(
 
 
 def result_no_submitter(shell_task, plugin=None):
-    """ helper function to return result when running without submitter """
+    """helper function to return result when running without submitter"""
     return shell_task()
 
 
 def result_submitter(shell_task, plugin):
-    """ helper function to return result when running with submitter
-        with specific plugin
+    """helper function to return result when running with submitter
+    with specific plugin
     """
     with Submitter(plugin=plugin) as sub:
         shell_task(submitter=sub)
@@ -42,6 +42,11 @@ if dot_check.stdout:
     DOT_FLAG = True
 else:
     DOT_FLAG = False
+
+
+@mark.task
+def op_4var(a, b, c, d):
+    return f"{a} {b} {c} {d}"
 
 
 @mark.task
@@ -134,6 +139,13 @@ def power(a, b):
 @mark.task
 def identity(x):
     return x
+
+
+@mark.task
+def identity_2flds(
+    x1, x2
+) -> ty.NamedTuple("Output", [("out1", ty.Any), ("out2", ty.Any)]):
+    return x1, x2
 
 
 @mark.task

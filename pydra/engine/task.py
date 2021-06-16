@@ -306,14 +306,18 @@ class ShellCommandTask(TaskBase):
         """Get command line arguments, returns a list if task has a state"""
         if is_lazy(self.inputs):
             raise Exception("can't return cmdline, self.inputs has LazyFields")
+        orig_inputs = attr.asdict(self.inputs)
         if self.state:
             command_args_list = []
             self.state.prepare_states(self.inputs)
             for ii, el in enumerate(self.state.states_ind):
                 command_args_list.append(self._command_args_single(el, index=ii))
+                self.inputs = attr.evolve(self.inputs, **orig_inputs)
             return command_args_list
         else:
-            return self._command_args_single()
+            command_args = self._command_args_single()
+            self.inputs = attr.evolve(self.inputs, **orig_inputs)
+            return command_args
 
     def _command_args_single(self, state_ind=None, index=None):
         """Get command line arguments for a single state
@@ -325,6 +329,15 @@ class ShellCommandTask(TaskBase):
         index : int
             Index in flattened list of states
         """
+        if index is not None:
+            modified_inputs = template_update(
+                self.inputs, output_dir=self.output_dir[index], state_ind=state_ind
+            )
+        else:
+            modified_inputs = template_update(self.inputs, output_dir=self.output_dir)
+        if modified_inputs is not None:
+            self.inputs = attr.evolve(self.inputs, **modified_inputs)
+
         pos_args = []  # list for (position, command arg)
         self._positions_provided = []
         for field in attr_fields(
@@ -332,7 +345,11 @@ class ShellCommandTask(TaskBase):
             exclude_names=("container", "image", "container_xargs", "bindings"),
         ):
             name, meta = field.name, field.metadata
-            if getattr(self.inputs, name) is attr.NOTHING and not meta.get("readonly"):
+            if (
+                getattr(self.inputs, name) is attr.NOTHING
+                and not meta.get("readonly")
+                and not meta.get("formatter")
+            ):
                 continue
             if name == "executable":
                 pos_args.append(
@@ -391,8 +408,9 @@ class ShellCommandTask(TaskBase):
         the specific field.
         """
         argstr = field.metadata.get("argstr", None)
-        if argstr is None:
-            # assuming that input that has no arstr is not used in the command
+        formatter = field.metadata.get("formatter", None)
+        if argstr is None and formatter is None:
+            # assuming that input that has no arstr is not used in the command, or a formatter is not provided too.
             return None
         pos = field.metadata.get("position", None)
         if pos is not None:
@@ -413,11 +431,45 @@ class ShellCommandTask(TaskBase):
         value = self._field_value(field, state_ind, index, check_file=True)
         if field.metadata.get("readonly", False) and value is not None:
             raise Exception(f"{field.name} is read only, the value can't be provided")
-        elif value is None and not field.metadata.get("readonly", False):
+        elif (
+            value is None
+            and not field.metadata.get("readonly", False)
+            and formatter is None
+        ):
             return None
 
+        # getting stated inputs
+        inputs_dict_st = attr.asdict(self.inputs)
+        if state_ind is not None:
+            for k, v in state_ind.items():
+                k = k.split(".")[1]
+                inputs_dict_st[k] = inputs_dict_st[k][v]
+
         cmd_add = []
-        if field.type is bool:
+        # formatter that creates a custom command argument
+        # it can thake the value of the filed, all inputs, or the value of other fields.
+        if "formatter" in field.metadata:
+            call_args = inspect.getargspec(field.metadata["formatter"])
+            call_args_val = {}
+            for argnm in call_args.args:
+                if argnm == "field":
+                    call_args_val[argnm] = value
+                elif argnm == "inputs":
+                    call_args_val[argnm] = inputs_dict_st
+                else:
+                    if argnm in inputs_dict_st:
+                        call_args_val[argnm] = inputs_dict_st[argnm]
+                    else:
+                        raise AttributeError(
+                            f"arguments of the formatter function from {field.name} "
+                            f"has to be in inputs or be field or output_dir, "
+                            f"but {argnm} is used"
+                        )
+            cmd_el_str = field.metadata["formatter"](**call_args_val)
+            cmd_el_str = cmd_el_str.strip().replace("  ", " ")
+            if cmd_el_str != "":
+                cmd_add += cmd_el_str.split(" ")
+        elif field.type is bool:
             # if value is simply True the original argstr is used,
             # if False, nothing is added to the command
             if value is True:
@@ -433,7 +485,7 @@ class ShellCommandTask(TaskBase):
                         argstr_f = argstr_formatting(
                             argstr, self.inputs, value_updates={field.name: val}
                         )
-                        argstr_formatted_l.append(argstr_f)
+                        argstr_formatted_l.append(f" {argstr_f}")
                     cmd_el_str = sep.join(argstr_formatted_l)
                 else:  # argstr has a simple form, e.g. "-f", or "--f"
                     cmd_el_str = sep.join([f" {argstr} {val}" for val in value])
@@ -445,7 +497,8 @@ class ShellCommandTask(TaskBase):
                     value = cmd_el_str
                 # if argstr has a more complex form, with "{input_field}"
                 if "{" in argstr and "}" in argstr:
-                    cmd_el_str = argstr_formatting(argstr, self.inputs)
+                    cmd_el_str = argstr.replace(f"{{{field.name}}}", str(value))
+                    cmd_el_str = argstr_formatting(cmd_el_str, self.inputs)
                 else:  # argstr has a simple form, e.g. "-f", or "--f"
                     if value:
                         cmd_el_str = f"{argstr} {value}"
@@ -459,17 +512,13 @@ class ShellCommandTask(TaskBase):
 
     @property
     def cmdline(self):
-        """ Get the actual command line that will be submitted
-            Returns a list if the task has a state.
+        """Get the actual command line that will be submitted
+        Returns a list if the task has a state.
         """
         if is_lazy(self.inputs):
             raise Exception("can't return cmdline, self.inputs has LazyFields")
         # checking the inputs fields before returning the command line
         self.inputs.check_fields_input_spec()
-        orig_inputs = attr.asdict(self.inputs)
-        modified_inputs = template_update(self.inputs, output_dir=self.output_dir)
-        if modified_inputs is not None:
-            self.inputs = attr.evolve(self.inputs, **modified_inputs)
         if isinstance(self, ContainerTask):
             if self.state:
                 cmdline = []
@@ -485,7 +534,6 @@ class ShellCommandTask(TaskBase):
             else:
                 cmdline = " ".join(self.command_args)
 
-        self.inputs = attr.evolve(self.inputs, **orig_inputs)
         return cmdline
 
     def _run_task(self):
@@ -609,6 +657,7 @@ class ContainerTask(ShellCommandTask):
         else:
             output_dir = self.output_dir[index]
         for binding in self.inputs.bindings:
+            binding = list(binding)
             if len(binding) == 3:
                 lpath, cpath, mode = binding
             elif len(binding) == 2:
